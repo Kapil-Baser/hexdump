@@ -11,6 +11,9 @@ size_t get_file_size(char *file_path);
 char *alloc_buffer(size_t size);
 void read_file(char *file_path, char *buffer, int buffer_size);
 void hexdump(void *buffer, size_t file_size);
+void hexdump_little_endian(void *buffer, size_t file_size);
+void rename_file(char *file);
+void print_c_style(void *buffer, char *file_name, size_t file_size);
 
 int main(int argc, char *argv[])
 {
@@ -25,7 +28,9 @@ int main(int argc, char *argv[])
     size_t file_size = get_file_size(file_path);
     char *buffer = alloc_buffer(file_size);
     read_file(file_path, buffer, file_size);
-    hexdump(buffer, file_size);
+    //hexdump(buffer, file_size);
+    //hexdump_little_endian(buffer, file_size);
+    print_c_style(buffer, argv[1], file_size);
     free(buffer);
     return 0;
 }
@@ -148,4 +153,130 @@ void hexdump(void *buffer, size_t file_size)
 
     // Printing the final address offset
     printf("%08zX\n", file_size);
+}
+
+void hexdump_little_endian(void *buffer, size_t file_size)
+{
+    u_int8_t *data = buffer;
+    size_t i, j;
+
+    for (i = 0; i < file_size; i++)
+    {
+        // Print the address offset at the start of each line
+        if (i % 16 == 0)
+        {
+            printf("%08zX  ", i);
+        }
+
+        // Add extra space after 8 bytes for readability
+        if (i % 8 == 0 && i % 16 != 0)
+        {
+            printf(" ");
+        }
+
+        // Handle Little-Endian Order
+        if (i % 4 == 3)  // Group by 4 bytes
+        {
+            // Reverse and print 4-byte group
+            for (j = 0; j < 4; j++)
+            {
+                printf("%02X ", data[i - j]);
+            }
+        }
+
+        // For the last few bytes of the file, ensure proper printing
+        if (i == file_size - 1 && (i % 4 != 3))
+        {
+            // Print remaining bytes in reversed order
+            size_t start = i - (i % 4);
+            for (j = i; j >= start; j--)
+            {
+                printf("%02X ", data[j]);
+            }
+
+            // Add padding for missing bytes in the last group
+            for (j = 0; j < (3 - i % 4); j++)
+            {
+                printf("   ");
+            }
+        }
+
+        // Handle the end of a line
+        if (i % 16 == 15 || i == file_size - 1)
+        {
+            // Add padding spaces if the line is incomplete
+            if (i % 16 != 15)
+            {
+                for (j = i % 16 + 1; j < 16; j++)
+                {
+                    printf("   ");
+                    if (j == 7) printf(" "); // Extra space after 8 bytes
+                }
+            }
+
+            // Print the ASCII representation
+            printf(" |");
+            for (j = i - (i % 16); j <= i; j++)
+            {
+                if (isprint(data[j]))
+                {
+                    printf("%c", data[j]);
+                }
+                else
+                {
+                    printf(".");
+                }
+            }
+            printf("|\n");
+        }
+    }
+
+    // Print the final address offset
+    printf("%08zX\n", file_size);
+}
+
+void rename_file(char *file)
+{
+    while (*file)
+    {
+        if (*file == '.')
+        {
+            *file = '_';
+        }
+        file++;
+    }
+}
+
+void print_c_style(void *buffer, char *file_name, size_t file_size)
+{
+    u_int8_t *data = buffer;
+    size_t i;
+    rename_file(file_name);
+    printf("unsigned char %s[] = {\n", file_name);
+
+    for (i = 0; i < file_size; i++)
+    {
+        // Spacing at every new line.
+        if (i % 12 == 0)
+        {
+            printf("  ");
+        }
+        // Since we don't want a comma at the very last offset, we check if this index is the last one or not.
+        if (i != file_size - 1)
+        {
+            printf("0x%02X, ", data[i]);
+        }
+        else
+        {
+            printf("0x%02X ", data[i]);
+        }
+        
+        // New line after 12 bytes.
+        if (i % 12 == 11 || i == file_size - 1)
+        {
+            printf("\n");
+        }
+    }
+    printf("};\n");
+    printf("unsigned int %s_len = %zu;\n", file_name, file_size);
 }
