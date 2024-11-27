@@ -8,7 +8,8 @@
 #define MAX_BUFF_SIZE 1024 * 50
 
 size_t get_file_size(char *file_path);
-size_t read_file(char *file_path, char *buffer, int buffer_size);
+char *alloc_buffer(size_t size);
+void read_file(char *file_path, char *buffer, int buffer_size);
 void hexdump(void *buffer, size_t file_size);
 
 int main(int argc, char *argv[])
@@ -20,12 +21,12 @@ int main(int argc, char *argv[])
     }
 
     char *file_path = argv[1];
-    char buffer[MAX_BUFF_SIZE] = {0};
 
     size_t file_size = get_file_size(file_path);
-    // TODO: allocate buffer on the heap
+    char *buffer = alloc_buffer(file_size);
     read_file(file_path, buffer, file_size);
     hexdump(buffer, file_size);
+    free(buffer);
     return 0;
 }
 
@@ -67,7 +68,18 @@ size_t get_file_size(char *file_path)
     return file_size;
 }
 
-size_t read_file(char *file_path, char *buffer, int buffer_size)
+char *alloc_buffer(size_t size)
+{
+    char *buffer = calloc(size, sizeof(char));
+    if (buffer == NULL)
+    {
+        fprintf(stderr, "[Error]: Memory allocation failed\n");
+        exit(EXIT_FAILURE);
+    }
+    return buffer;
+}
+
+void read_file(char *file_path, char *buffer, int file_size)
 {
     FILE *fp = fopen(file_path, "r");
     if (fp == NULL)
@@ -80,7 +92,6 @@ size_t read_file(char *file_path, char *buffer, int buffer_size)
 
     // Closing file pointer and file descriptor
     fclose(fp);
-    return file_size;
 }
 
 void hexdump(void *buffer, size_t file_size)
