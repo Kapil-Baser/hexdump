@@ -12,3 +12,12 @@ kapil@DESKTOP-Q6HEFQA:~/repos/hexdump$ ./hexdump test.txt
 00000010  65 2E 0A                                          |e..|
 00000013
 ```
+C style output
+```bash
+kapil@DESKTOP-Q6HEFQA:~/repos/hexdump$ ./hexdump test.txt
+unsigned char test_txt[] = {
+  0x54, 0x68, 0x69, 0x73, 0x20, 0x69, 0x73, 0x20, 0x74, 0x65, 0x73, 0x74,
+  0x20, 0x66, 0x69, 0x6C, 0x65, 0x2E, 0x0A
+};
+unsigned int test_txt_len = 19;
+```
