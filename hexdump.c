@@ -29,24 +29,58 @@ int main(int argc, char *argv[])
     size_t file_size;
     char *buffer = NULL;
     int option;
+    int cflag = 0, eflag = 0, iflag = 0;
     while ((option = getopt(argc, argv, "cei")) != -1)
     {
         switch(option)
         {
             case 'c':
             {
+                if (cflag)
+                {
+                    fprintf(stderr, "[Error]: Give only one option at a time\n");
+                    return 1;
+                }
+                else
+                {
+                    cflag++;
+                    eflag++;
+                    iflag++;
+                }
                 buffer = read_and_process(file_path, &file_size);
-                hexdump(buffer, file_size);
+                hexdump(buffer, file_size); 
                 break;
             }
             case 'e':
             {
+                if (eflag)
+                {
+                    fprintf(stderr, "[Error]: Give only one option at a time\n");
+                    return 1;
+                }
+                else
+                {
+                    eflag++;
+                    cflag++;
+                    iflag++;
+                }
                 buffer = read_and_process(file_path, &file_size);
                 hexdump_little_endian(buffer, file_size);
                 break;
             }
             case 'i':
             {
+                if (iflag)
+                {
+                    fprintf(stderr, "[Error]: Give only one option at a time\n");
+                    return 1;
+                }
+                else
+                {
+                    cflag++;
+                    eflag++;
+                    iflag++;
+                }
                 buffer = read_and_process(file_path, &file_size);
                 print_c_style(buffer, file_path, file_size);
                 break;
