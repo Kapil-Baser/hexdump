@@ -5,8 +5,10 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <getopt.h>
 #define MAX_BUFF_SIZE 1024 * 50
 
+char *read_and_process(char *file_path, size_t *size);
 size_t get_file_size(char *file_path);
 char *alloc_buffer(size_t size);
 void read_file(char *file_path, char *buffer, int buffer_size);
@@ -17,22 +19,55 @@ void print_c_style(void *buffer, char *file_name, size_t file_size);
 
 int main(int argc, char *argv[])
 {
-    if (argc != 2)
+    if (argc != 3)
     {
-        fprintf(stderr, "Usage: %s <file>\n", argv[0]);
+        fprintf(stderr, "Usage: %s [options] <file>\n", argv[0]);
         return 1;
     }
 
-    char *file_path = argv[1];
+    char *file_path = argv[2];
+    size_t file_size;
+    char *buffer = NULL;
+    int option;
+    while ((option = getopt(argc, argv, "cei")) != -1)
+    {
+        switch(option)
+        {
+            case 'c':
+            {
+                buffer = read_and_process(file_path, &file_size);
+                hexdump(buffer, file_size);
+                break;
+            }
+            case 'e':
+            {
+                buffer = read_and_process(file_path, &file_size);
+                hexdump_little_endian(buffer, file_size);
+                break;
+            }
+            case 'i':
+            {
+                buffer = read_and_process(file_path, &file_size);
+                print_c_style(buffer, file_path, file_size);
+                break;
+            }
+            default:
+            {
+                fprintf(stderr, "Usage: %s [options] <file>\n", argv[0]);
+            }
+        }
+    }      
+    free(buffer);
+    return 0;
+}
 
+char *read_and_process(char *file_path, size_t *size)
+{
     size_t file_size = get_file_size(file_path);
     char *buffer = alloc_buffer(file_size);
     read_file(file_path, buffer, file_size);
-    //hexdump(buffer, file_size);
-    //hexdump_little_endian(buffer, file_size);
-    print_c_style(buffer, argv[1], file_size);
-    free(buffer);
-    return 0;
+    *size = file_size;
+    return buffer;
 }
 
 size_t get_file_size(char *file_path)
