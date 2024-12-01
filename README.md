@@ -25,3 +25,4 @@ TODO:
  - ~~Adding support for c style output~~
  - ~~Adding support for displaying bytes in little endian order~~
  - Need to fix command line argument options taking more than one option
+ - Displaying --help command
