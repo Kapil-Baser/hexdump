@@ -22,5 +22,6 @@ unsigned char test_txt[] = {
 unsigned int test_txt_len = 19;
 ```
 TODO:
- - Adding support for c style output
- - Adding support for displaying bytes in little endian order
+ - ~~Adding support for c style output~~
+ - ~~Adding support for displaying bytes in little endian order~~
+ - Need to fix command line argument options taking more than one option
