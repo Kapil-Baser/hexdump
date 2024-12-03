@@ -16,12 +16,14 @@ void hexdump(void *buffer, size_t file_size);
 void hexdump_little_endian(void *buffer, size_t file_size);
 void rename_file(char *file);
 void print_c_style(void *buffer, char *file_name, size_t file_size);
+void print_usage();
+void print_help();
 
 int main(int argc, char *argv[])
 {
     if (argc != 3)
     {
-        fprintf(stderr, "Usage: %s [options] <file>\n", argv[0]);
+        print_usage(argv[0]);
         return 1;
     }
 
@@ -30,7 +32,7 @@ int main(int argc, char *argv[])
     char *buffer = NULL;
     int option;
     int cflag = 0, eflag = 0, iflag = 0;
-    while ((option = getopt(argc, argv, "cei")) != -1)
+    while ((option = getopt(argc, argv, "ceih")) != -1)
     {
         switch(option)
         {
@@ -85,14 +87,23 @@ int main(int argc, char *argv[])
                 print_c_style(buffer, file_path, file_size);
                 break;
             }
+            case 'h':
+            {
+                print_help();
+            }
             default:
             {
-                fprintf(stderr, "Usage: %s [options] <file>\n", argv[0]);
+                print_usage(argv[0]);
             }
         }
     }      
     free(buffer);
     return 0;
+}
+
+void print_usage(char *program_name)
+{
+    fprintf(stderr, "Usage: %s [options] <file>\n", program_name);
 }
 
 char *read_and_process(char *file_path, size_t *size)
@@ -166,6 +177,11 @@ void read_file(char *file_path, char *buffer, int file_size)
 
     // Closing file pointer and file descriptor
     fclose(fp);
+}
+
+void print_help()
+{
+
 }
 
 void hexdump(void *buffer, size_t file_size)
