@@ -6,8 +6,26 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <getopt.h>
+#include <argp.h>
 #define MAX_BUFF_SIZE 1024 * 50
 
+
+// Options for argp
+static struct argp_option options[] = 
+{
+  {0, 'i', "<File>",      0,  "output in C include file style." },
+  {0, 'e', "<File>",      0,  "output in little endian" },
+  { 0 }
+};
+
+// Structure to hold program arguments
+struct arguments
+{
+    char *filename;
+    int opt;
+};
+
+static int parse_opt (int key, char *arg, struct argp_state *state);
 char *read_and_process(char *file_path, size_t *size);
 size_t get_file_size(char *file_path);
 char *alloc_buffer(size_t size);
@@ -16,20 +34,33 @@ void hexdump(void *buffer, size_t file_size);
 void hexdump_little_endian(void *buffer, size_t file_size);
 void rename_file(char *file);
 void print_c_style(void *buffer, char *file_name, size_t file_size);
-void print_usage();
-void print_help();
 
 int main(int argc, char *argv[])
 {
-    if (argc != 3)
-    {
-        print_usage(argv[0]);
-        return 1;
-    }
-
-    char *file_path = argv[2];
+    struct arguments args;
+    static struct argp argp = { options, parse_opt, "FILENAME", "Prints the hex dump of FILE" };
     size_t file_size;
     char *buffer = NULL;
+    argp_parse(&argp, argc, argv, 0, 0, &args);
+
+    if (args.opt == 1)
+    {
+        buffer = read_and_process(args.filename, &file_size);
+        print_c_style(buffer, args.filename, file_size);
+        return 0;
+    }
+    else if (args.opt == 2)
+    {
+        buffer = read_and_process(args.filename, &file_size);
+        hexdump_little_endian(buffer, file_size);
+        return 0;
+    }
+    char *file_path = args.filename;
+
+    buffer = read_and_process(file_path, &file_size);
+    hexdump(buffer, file_size);
+    free(buffer);
+    return 0;
     int option;
     int cflag = 0, eflag = 0, iflag = 0;
     while ((option = getopt(argc, argv, "ceih")) != -1)
@@ -87,23 +118,66 @@ int main(int argc, char *argv[])
                 print_c_style(buffer, file_path, file_size);
                 break;
             }
-            case 'h':
-            {
-                print_help();
-            }
-            default:
-            {
-                print_usage(argv[0]);
-            }
         }
     }      
     free(buffer);
     return 0;
 }
 
-void print_usage(char *program_name)
+static int parse_opt (int key, char *arg, struct argp_state *state)
 {
-    fprintf(stderr, "Usage: %s [options] <file>\n", program_name);
+    struct arguments *args = state->input;
+
+    switch(key)
+    {
+        case 'c':
+        {
+            //buffer = read_and_process(file_path, &file_size);
+            //hexdump(buffer, file_size);
+            puts("C option");
+            break;
+        }
+        case 'e':
+        {
+            args->filename = arg;
+            args->opt = 2;
+            //buffer = read_and_process(file_path, &file_size);
+            //hexdump_little_endian(buffer, file_size);
+            puts("e option");
+            break;
+        }
+        case 'i':
+        {
+            char *file_path = arg;
+            char *buffer = NULL;
+            static size_t file_size;
+            buffer = read_and_process(file_path, &file_size);
+            print_c_style(buffer, file_path, file_size);
+            break;
+        }
+        case ARGP_KEY_ARG:
+        {
+            if (state->arg_num >= 1)
+            {
+                argp_usage(state);
+            }
+            args->filename = arg;
+            break;
+        }
+        case ARGP_KEY_END:
+        {
+            if (state->arg_num < 1)
+            {
+                argp_usage(state);
+            }
+            break;
+        }
+        default:
+        {
+            return ARGP_ERR_UNKNOWN;
+        }
+    }
+    return 0;
 }
 
 char *read_and_process(char *file_path, size_t *size)
@@ -177,11 +251,6 @@ void read_file(char *file_path, char *buffer, int file_size)
 
     // Closing file pointer and file descriptor
     fclose(fp);
-}
-
-void print_help()
-{
-
 }
 
 void hexdump(void *buffer, size_t file_size)
