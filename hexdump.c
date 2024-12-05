@@ -14,7 +14,7 @@
 static struct argp_option options[] = 
 {
   {0, 'i', "<File>",      0,  "output in C include file style." },
-  {0, 'e', "<File>",      0,  "output in little endian" },
+  {0, 'e', "FILE",      0,  "output in little endian" },
   { 0 }
 };
 
@@ -132,13 +132,6 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
 
     switch(key)
     {
-        case 'c':
-        {
-            //buffer = read_and_process(file_path, &file_size);
-            //hexdump(buffer, file_size);
-            puts("C option");
-            break;
-        }
         case 'e':
         {
             args->filename = arg;
@@ -152,10 +145,10 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             char *file_path = arg;
             args->filename = arg;
             args->opt = C_STYLE;
-            char *buffer = NULL;
+            /*char *buffer = NULL;
             static size_t file_size;
             buffer = read_and_process(file_path, &file_size);
-            print_c_style(buffer, file_path, file_size);
+            print_c_style(buffer, file_path, file_size);*/
             break;
         }
         case ARGP_KEY_ARG:
@@ -167,14 +160,14 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             args->filename = arg;
             break;
         }
-        case ARGP_KEY_END:
+        /*case ARGP_KEY_END:
         {
             if (state->arg_num < 1)
             {
                 argp_usage(state);
             }
             break;
-        }
+        }*/
         default:
         {
             return ARGP_ERR_UNKNOWN;
