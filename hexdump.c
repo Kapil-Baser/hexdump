@@ -18,6 +18,7 @@ static struct argp_option options[] =
   { 0 }
 };
 
+static enum flags { LITTLE_ENDIAN = 1, C_STYLE = 2 };
 // Structure to hold program arguments
 struct arguments
 {
@@ -43,22 +44,23 @@ int main(int argc, char *argv[])
     char *buffer = NULL;
     argp_parse(&argp, argc, argv, 0, 0, &args);
 
-    if (args.opt == 1)
-    {
-        buffer = read_and_process(args.filename, &file_size);
-        print_c_style(buffer, args.filename, file_size);
-        return 0;
-    }
-    else if (args.opt == 2)
+    if (args.opt == LITTLE_ENDIAN)
     {
         buffer = read_and_process(args.filename, &file_size);
         hexdump_little_endian(buffer, file_size);
-        return 0;
+        //return 0;
     }
-    char *file_path = args.filename;
-
-    buffer = read_and_process(file_path, &file_size);
-    hexdump(buffer, file_size);
+    else if (args.opt == C_STYLE)
+    {
+        buffer = read_and_process(args.filename, &file_size);
+        print_c_style(buffer, args.filename, file_size);
+        //return 0;
+    }
+    else
+    {
+        buffer = read_and_process(args.filename, &file_size);
+        hexdump(buffer, file_size);
+    }
     free(buffer);
     return 0;
     int option;
@@ -80,8 +82,8 @@ int main(int argc, char *argv[])
                     eflag++;
                     iflag++;
                 }
-                buffer = read_and_process(file_path, &file_size);
-                hexdump(buffer, file_size); 
+                //buffer = read_and_process(file_path, &file_size);
+                //hexdump(buffer, file_size); 
                 break;
             }
             case 'e':
@@ -97,8 +99,8 @@ int main(int argc, char *argv[])
                     cflag++;
                     iflag++;
                 }
-                buffer = read_and_process(file_path, &file_size);
-                hexdump_little_endian(buffer, file_size);
+                //buffer = read_and_process(file_path, &file_size);
+                //hexdump_little_endian(buffer, file_size);
                 break;
             }
             case 'i':
@@ -114,8 +116,8 @@ int main(int argc, char *argv[])
                     eflag++;
                     iflag++;
                 }
-                buffer = read_and_process(file_path, &file_size);
-                print_c_style(buffer, file_path, file_size);
+                //buffer = read_and_process(file_path, &file_size);
+                //print_c_style(buffer, file_path, file_size);
                 break;
             }
         }
@@ -140,15 +142,16 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         case 'e':
         {
             args->filename = arg;
-            args->opt = 2;
+            args->opt = LITTLE_ENDIAN;
             //buffer = read_and_process(file_path, &file_size);
             //hexdump_little_endian(buffer, file_size);
-            puts("e option");
             break;
         }
         case 'i':
         {
             char *file_path = arg;
+            args->filename = arg;
+            args->opt = C_STYLE;
             char *buffer = NULL;
             static size_t file_size;
             buffer = read_and_process(file_path, &file_size);
