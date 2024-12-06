@@ -7,13 +7,14 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <argp.h>
+#include <argz.h>
 #define MAX_BUFF_SIZE 1024 * 50
 
 const char *argp_program_version = "version 1.0";
 // Options for argp
 static struct argp_option options[] = 
 {
-  {0, 'i', "<File>",      0,  "output in C include file style." },
+  {0, 'i', "FILE",      0,  "output in C include file style." },
   {0, 'e', "FILE",      0,  "output in little endian" },
   { 0 }
 };
@@ -22,7 +23,9 @@ static enum flags { LITTLE_ENDIAN = 1, C_STYLE = 2 };
 // Structure to hold program arguments
 struct arguments
 {
-    char *filename;
+    char *argz;
+    size_t argz_len;
+    char *input_file;
     int opt;
 };
 
@@ -39,27 +42,38 @@ void print_c_style(void *buffer, char *file_name, size_t file_size);
 int main(int argc, char *argv[])
 {
     struct arguments args;
-    static struct argp argp = { options, parse_opt, "FILENAME [FILENAME [FILENAME [FILENAME]]]", "Prints the hex dump of FILE" };
+    static struct argp argp = { options, parse_opt, "FILENAME", "Prints the hex dump of FILE" };
     size_t file_size;
     char *buffer = NULL;
     int arg_count = 1;
-    argp_parse(&argp, argc, argv, 0, 0, &arg_count);
-
+    if (argp_parse(&argp, argc, argv, 0, 0, &args) == 0)
+    {
+        const char *prev = NULL;
+        char *file;
+        while ((file = argz_next(args.argz, args.argz_len, prev)))
+        {
+            printf(" %s", file);
+            prev = file;
+        }
+        free(args.argz);
+    }
+    printf("%s", args.input_file);
+    
     if (args.opt == LITTLE_ENDIAN)
     {
-        buffer = read_and_process(args.filename, &file_size);
+        buffer = read_and_process(args.input_file, &file_size);
         hexdump_little_endian(buffer, file_size);
         //return 0;
     }
     else if (args.opt == C_STYLE)
     {
-        buffer = read_and_process(args.filename, &file_size);
-        print_c_style(buffer, args.filename, file_size);
+        buffer = read_and_process(args.input_file, &file_size);
+        print_c_style(buffer, args.input_file, file_size);
         //return 0;
     }
     else
     {
-        buffer = read_and_process(args.filename, &file_size);
+        buffer = read_and_process(args.input_file, &file_size);
         hexdump(buffer, file_size);
     }
     free(buffer);
@@ -135,18 +149,20 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
     {
         case 'e':
         {
-            args->filename = arg;
-            args->opt = LITTLE_ENDIAN;
+            //args->filename = arg;
+            //args->opt = LITTLE_ENDIAN;
             //buffer = read_and_process(file_path, &file_size);
             //hexdump_little_endian(buffer, file_size);
             break;
         }
         case 'i':
         {
-            char *file_path = arg;
-            args->filename = arg;
+            args->input_file = arg;
             args->opt = C_STYLE;
-            /*char *buffer = NULL;
+            /*char *file_path = arg;
+            //args->filename = arg;
+            //args->opt = C_STYLE;
+            char *buffer = NULL;
             static size_t file_size;
             buffer = read_and_process(file_path, &file_size);
             print_c_style(buffer, file_path, file_size);*/
@@ -154,11 +170,12 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         }
         case ARGP_KEY_ARG:
         {
-            (*arg_count)--;
+            argz_add(&args->argz, &args->argz_len, arg); 
+            /*(*arg_count)--;
             if (*arg_count >= 0)
             {
                 puts(arg);
-            }
+            }*/
             /*if (state->arg_num >= 1)
             {
                 argp_usage(state);
@@ -166,9 +183,28 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             args->filename = arg;*/
             break;
         }
+        case ARGP_KEY_INIT:
+        {
+            args->argz = 0;
+            args->argz_len = 0;
+            args->input_file = 0;
+            break;
+        }
         case ARGP_KEY_END:
         {
-            if (*arg_count == 0)
+            size_t count = argz_count(args->argz, args->argz_len);
+            if (args->input_file)
+            {
+                if (count > 0)
+                    argp_failure (state, 1, 0, "too many arguments");
+            }
+            else
+            {
+                if (count < 1)
+                    argp_failure (state, 1, 0, "too few arguments"); 
+            }
+
+            /*if (*arg_count == 0)
             {
                 puts("");
             }
@@ -179,10 +215,6 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             else if (*arg_count < 0)
             {
                 argp_failure(state, 1, 0, "too many arguments");
-            }
-            /*if (state->arg_num < 1)
-            {
-                argp_usage(state);
             }*/
             break;
         }
