@@ -9,7 +9,7 @@
 #include <argp.h>
 #define MAX_BUFF_SIZE 1024 * 50
 
-
+const char *argp_program_version = "version 1.0";
 // Options for argp
 static struct argp_option options[] = 
 {
@@ -39,10 +39,11 @@ void print_c_style(void *buffer, char *file_name, size_t file_size);
 int main(int argc, char *argv[])
 {
     struct arguments args;
-    static struct argp argp = { options, parse_opt, "FILENAME", "Prints the hex dump of FILE" };
+    static struct argp argp = { options, parse_opt, "FILENAME [FILENAME [FILENAME [FILENAME]]]", "Prints the hex dump of FILE" };
     size_t file_size;
     char *buffer = NULL;
-    argp_parse(&argp, argc, argv, 0, 0, &args);
+    int arg_count = 1;
+    argp_parse(&argp, argc, argv, 0, 0, &arg_count);
 
     if (args.opt == LITTLE_ENDIAN)
     {
@@ -129,7 +130,7 @@ int main(int argc, char *argv[])
 static int parse_opt (int key, char *arg, struct argp_state *state)
 {
     struct arguments *args = state->input;
-
+    int *arg_count = state->input;
     switch(key)
     {
         case 'e':
@@ -153,21 +154,38 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         }
         case ARGP_KEY_ARG:
         {
-            if (state->arg_num >= 1)
+            (*arg_count)--;
+            if (*arg_count >= 0)
+            {
+                puts(arg);
+            }
+            /*if (state->arg_num >= 1)
             {
                 argp_usage(state);
             }
-            args->filename = arg;
+            args->filename = arg;*/
             break;
         }
-        /*case ARGP_KEY_END:
+        case ARGP_KEY_END:
         {
-            if (state->arg_num < 1)
+            if (*arg_count == 0)
+            {
+                puts("");
+            }
+            else if (*arg_count >= 1)
+            {
+                argp_failure(state, 1, 0, "too few arguments");
+            }
+            else if (*arg_count < 0)
+            {
+                argp_failure(state, 1, 0, "too many arguments");
+            }
+            /*if (state->arg_num < 1)
             {
                 argp_usage(state);
-            }
+            }*/
             break;
-        }*/
+        }
         default:
         {
             return ARGP_ERR_UNKNOWN;
