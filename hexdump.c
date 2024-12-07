@@ -57,24 +57,28 @@ int main(int argc, char *argv[])
         }
         free(args.argz);
     }
-    printf("%s", args.input_file);
     
-    if (args.opt == LITTLE_ENDIAN)
+    if (args.input_file)
     {
-        buffer = read_and_process(args.input_file, &file_size);
-        hexdump_little_endian(buffer, file_size);
+        if (args.opt == LITTLE_ENDIAN)
+        {
+            buffer = read_and_process(args.input_file, &file_size);
+            hexdump_little_endian(buffer, file_size);
+        }
+        else if (args.opt == C_STYLE)
+        {
+            buffer = read_and_process(args.input_file, &file_size);
+            print_c_style(buffer, args.input_file, file_size);  
+        }
+        else
+        {
+            buffer = read_and_process(args.input_file, &file_size);
+            hexdump(buffer, file_size);
+        }
+        // Free the buffer
+        free(buffer);
     }
-    else if (args.opt == C_STYLE)
-    {
-        buffer = read_and_process(args.input_file, &file_size);
-        print_c_style(buffer, args.input_file, file_size);  
-    }
-    else
-    {
-        buffer = read_and_process(args.input_file, &file_size);
-        hexdump(buffer, file_size);
-    }
-    free(buffer);
+
     return 0;
 }
 
