@@ -149,6 +149,8 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
     {
         case 'e':
         {
+            args->input_file = arg;
+            args->opt = LITTLE_ENDIAN;
             //args->filename = arg;
             //args->opt = LITTLE_ENDIAN;
             //buffer = read_and_process(file_path, &file_size);
@@ -170,17 +172,12 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
         }
         case ARGP_KEY_ARG:
         {
-            argz_add(&args->argz, &args->argz_len, arg); 
-            /*(*arg_count)--;
-            if (*arg_count >= 0)
+            // If no options were given then take the file name
+            if (!args->input_file)
             {
-                puts(arg);
-            }*/
-            /*if (state->arg_num >= 1)
-            {
-                argp_usage(state);
+                args->input_file = arg;
             }
-            args->filename = arg;*/
+            argz_add(&args->argz, &args->argz_len, arg);
             break;
         }
         case ARGP_KEY_INIT:
@@ -188,6 +185,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             args->argz = 0;
             args->argz_len = 0;
             args->input_file = 0;
+            args->opt = 0;
             break;
         }
         case ARGP_KEY_END:
@@ -195,7 +193,7 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
             size_t count = argz_count(args->argz, args->argz_len);
             if (args->input_file)
             {
-                if (count > 0)
+                if (count > 1)
                     argp_failure (state, 1, 0, "too many arguments");
             }
             else
@@ -203,19 +201,6 @@ static int parse_opt (int key, char *arg, struct argp_state *state)
                 if (count < 1)
                     argp_failure (state, 1, 0, "too few arguments"); 
             }
-
-            /*if (*arg_count == 0)
-            {
-                puts("");
-            }
-            else if (*arg_count >= 1)
-            {
-                argp_failure(state, 1, 0, "too few arguments");
-            }
-            else if (*arg_count < 0)
-            {
-                argp_failure(state, 1, 0, "too many arguments");
-            }*/
             break;
         }
         default:
