@@ -46,7 +46,7 @@ int main(int argc, char *argv[])
     size_t file_size;
     char *buffer = NULL;
     
-    if (argp_parse(&argp, argc, argv, 0, 0, &args) == 0)
+    /*if (argp_parse(&argp, argc, argv, 0, 0, &args) == 0)
     {
         const char *prev = NULL;
         char *file;
@@ -56,8 +56,8 @@ int main(int argc, char *argv[])
             prev = file;
         }
         free(args.argz);
-    }
-    
+    }*/
+    argp_parse(&argp, argc, argv, 0, 0, &args);
     if (args.input_file)
     {
         if (args.opt == LITTLE_ENDIAN)
