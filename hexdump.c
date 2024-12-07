@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
     static struct argp argp = { options, parse_opt, "FILENAME", "Prints the hex dump of FILE" };
     size_t file_size;
     char *buffer = NULL;
-    int arg_count = 1;
+    
     if (argp_parse(&argp, argc, argv, 0, 0, &args) == 0)
     {
         const char *prev = NULL;
@@ -63,13 +63,11 @@ int main(int argc, char *argv[])
     {
         buffer = read_and_process(args.input_file, &file_size);
         hexdump_little_endian(buffer, file_size);
-        //return 0;
     }
     else if (args.opt == C_STYLE)
     {
         buffer = read_and_process(args.input_file, &file_size);
-        print_c_style(buffer, args.input_file, file_size);
-        //return 0;
+        print_c_style(buffer, args.input_file, file_size);  
     }
     else
     {
@@ -78,96 +76,24 @@ int main(int argc, char *argv[])
     }
     free(buffer);
     return 0;
-    int option;
-    int cflag = 0, eflag = 0, iflag = 0;
-    while ((option = getopt(argc, argv, "ceih")) != -1)
-    {
-        switch(option)
-        {
-            case 'c':
-            {
-                if (cflag)
-                {
-                    fprintf(stderr, "[Error]: Give only one option at a time\n");
-                    return 1;
-                }
-                else
-                {
-                    cflag++;
-                    eflag++;
-                    iflag++;
-                }
-                //buffer = read_and_process(file_path, &file_size);
-                //hexdump(buffer, file_size); 
-                break;
-            }
-            case 'e':
-            {
-                if (eflag)
-                {
-                    fprintf(stderr, "[Error]: Give only one option at a time\n");
-                    return 1;
-                }
-                else
-                {
-                    eflag++;
-                    cflag++;
-                    iflag++;
-                }
-                //buffer = read_and_process(file_path, &file_size);
-                //hexdump_little_endian(buffer, file_size);
-                break;
-            }
-            case 'i':
-            {
-                if (iflag)
-                {
-                    fprintf(stderr, "[Error]: Give only one option at a time\n");
-                    return 1;
-                }
-                else
-                {
-                    cflag++;
-                    eflag++;
-                    iflag++;
-                }
-                //buffer = read_and_process(file_path, &file_size);
-                //print_c_style(buffer, file_path, file_size);
-                break;
-            }
-        }
-    }      
-    free(buffer);
-    return 0;
 }
 
 static int parse_opt (int key, char *arg, struct argp_state *state)
 {
     struct arguments *args = state->input;
-    int *arg_count = state->input;
+
     switch(key)
     {
         case 'e':
         {
             args->input_file = arg;
             args->opt = LITTLE_ENDIAN;
-            //args->filename = arg;
-            //args->opt = LITTLE_ENDIAN;
-            //buffer = read_and_process(file_path, &file_size);
-            //hexdump_little_endian(buffer, file_size);
             break;
         }
         case 'i':
         {
             args->input_file = arg;
             args->opt = C_STYLE;
-            /*char *file_path = arg;
-            //args->filename = arg;
-            //args->opt = C_STYLE;
-            char *buffer = NULL;
-            static size_t file_size;
-            buffer = read_and_process(file_path, &file_size);
-            print_c_style(buffer, file_path, file_size);*/
             break;
         }
         case ARGP_KEY_ARG:
