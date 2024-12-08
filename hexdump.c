@@ -1,3 +1,7 @@
+#include "helper.h"
+
+enum { LITTLE_ENDIAN = 1, C_STYLE = 2 };
+/*
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -5,7 +9,6 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <getopt.h>
 #include <argp.h>
 #include <argz.h>
 #define MAX_BUFF_SIZE 1024 * 50
@@ -37,12 +40,12 @@ void read_file(char *file_path, char *buffer, int buffer_size);
 void hexdump(void *buffer, size_t file_size);
 void hexdump_little_endian(void *buffer, size_t file_size);
 void rename_file(char *file);
-void print_c_style(void *buffer, char *file_name, size_t file_size);
+void print_c_style(void *buffer, char *file_name, size_t file_size);*/
 
 int main(int argc, char *argv[])
 {
     struct arguments args;
-    static struct argp argp = { options, parse_opt, "FILENAME", "Prints the hex dump of FILE" };
+    static struct argp argp = { options, parse_opt, "FILENAME", "Prints the hex dump of FILE", 0, 0, 0 };
     size_t file_size;
     char *buffer = NULL;
     
